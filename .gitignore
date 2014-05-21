@@ -1,0 +1,7 @@
+*.pyc
+/.venv/
+/github_social_graph.egg-info/
+
+/*.json
+/*.dot
+/*.png
