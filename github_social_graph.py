@@ -16,6 +16,8 @@ $ github-social-graph --orgs vim-jp -o jp.json
 $ github-social-graph -i jp.json -o jp.png
 """
 
+from __future__ import division
+
 import os
 import sys
 import errno
@@ -24,14 +26,19 @@ import os.path as path
 import json
 import argparse
 from itertools import izip
+from StringIO import StringIO
 
 from pygithub3 import Github
 from pygraphviz import AGraph
+from PIL import Image, ImageDraw
 
 
 SUPPORTED_INPUT_FORMATS = ['json', 'dot']
-AVATAR_SIZE = 60
 AVATAR_DOWNLOADING_PARALLEL_LEVEL = 10
+AVATAR_SIZE = 60
+DPI = 96
+CIRCLES_BORDER_COLOR = '#3182bd'
+ARROWS_BORDER_COLOR = '#9ecae1'
 
 
 def log(text, *args, **kwargs):
@@ -174,25 +181,36 @@ def get_avatar_path(node):
 
 
 def create_graph(graph_data, format, avatars):
-    def add_avatar_node(node):
-        # TODO: Draw some placeholder image for users without avatars?
+    def add_node(node):
+        attrs = {
+            'label': node,
+            'image': '',
+            'shape': 'circle',
+            'margin': 0,
+            'color': CIRCLES_BORDER_COLOR,
+        }
         if avatars:
-            avatar_url = graph_data[node].get('avatar_url')
-            if avatar_url:
-                graph.add_node(node, image=get_avatar_path(node), label='')
+            # TODO: Draw some placeholder image for users without avatars?
+            if 'avatar_url' in graph_data[node]:
+                attrs['image'] = get_avatar_path(node)
+                attrs['label'] = ''
+                attrs['width'] = AVATAR_SIZE/DPI
+                attrs['height'] = AVATAR_SIZE/DPI
+                attrs['fixedsize'] = 'true'
+        graph.add_node(node, **attrs)
 
     if format == 'dot':
         graph = AGraph(graph_data, directed=True)
     else:
         graph = AGraph(directed=True)
         for username, info in graph_data.iteritems():
-            add_avatar_node(username)
+            add_node(username)
             for f in info.get('followers', []):
-                add_avatar_node(f)
-                graph.add_edge(f, username, color='blue')
+                add_node(f)
+                graph.add_edge(f, username, color=ARROWS_BORDER_COLOR)
             for f in info.get('following', []):
-                add_avatar_node(f)
-                graph.add_edge(username, f, color='blue')
+                add_node(f)
+                graph.add_edge(username, f, color=ARROWS_BORDER_COLOR)
     return graph
 
 
@@ -216,7 +234,7 @@ def fetch_avatars(graph_data):
 
     mkdirp(get_avatars_cache_dir())
     urls_usernames = [
-        ('{}s={}'.format(info['avatar_url'], AVATAR_SIZE), username)
+        (info['avatar_url'], username)
         for username, info in graph_data.iteritems()
         if 'avatar_url' in info and not is_cached(username)]
     if not urls_usernames:
@@ -229,7 +247,26 @@ def fetch_avatars(graph_data):
     # request object. So this hack.
     for resp, username in izip(resps, usernames):
         with open(get_avatar_path(username), 'w') as fh:
-            fh.write(resp.content)
+            fh.write(process_avatar(resp.content))
+
+
+def process_avatar(data):
+    """
+    Shrink avatar image and do some post-processing.
+    """
+    image = Image.open(StringIO(data))
+
+    width, height = image.size
+    mask = Image.new('RGBA', (width, height), (255, 255, 255, 0))
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse([0, 0, width, height], fill=(255,255,255,255))
+    mask.paste(image, mask=mask)
+    image = mask
+    image.thumbnail((AVATAR_SIZE, AVATAR_SIZE), Image.ANTIALIAS)
+
+    output = StringIO()
+    image.save(output, 'PNG')
+    return output.getvalue()
 
 
 def draw_graph(graph, output, format):
