@@ -39,9 +39,9 @@ $ github-social-graph -i jp.json -o jp.png
 This graph demonstrates some curious relationships between
 Japanese/Vim/Haskell users (click for fullsize image):
 
-[![](http://dump.bitcheese.net/files/yxakemu/jp-shrink-min.png)](http://dump.bitcheese.net/files/ifinofo/jp-min.png)
+[![](http://dump.bitcheese.net/files/ysilytu/jp-shrink-min.png)](http://dump.bitcheese.net/files/izunyjy/jp-min.png)
 
-(Produced by `github-social-graph --token --orgs vim-jp akechi golang-samples vimjolts --users bos tibbe donsbot kazu-yamamoto spl -o jp.png`)
+(Produced by `github-social-graph --token --orgs vim-jp akechi golang-samples vimjolts neovim --users bos tibbe donsbot kazu-yamamoto spl MarcWeber ZyX-I -o jp.png`)
 
 Much simpler graph:
 
