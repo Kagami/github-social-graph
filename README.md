@@ -8,17 +8,15 @@ API and [graphviz](http://www.graphviz.org/).
 Installation via PIP:
 
 ```bash
-pip install https://github.com/Kagami/github-social-graph/archive/master.zip
+$ pip install https://github.com/Kagami/github-social-graph/archive/master.zip
 ```
 
 ## Usage
 
 Show help:
 ```bash
-github-social-graph -h
+$ github-social-graph -h  # or gsg -h
 ```
-
-(or `gsg -h`)
 
 Usage examples:
 
