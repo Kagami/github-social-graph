@@ -9,6 +9,7 @@ setup(
     author_email='kagami@genshiken.org',
     url='https://github.com/Kagami/github-social-graph',
     description='Build simple social graphs for GitHub',
+    license='CC0',
     install_requires=[
         'pygithub3>=0.5.1',
         'pygraphviz>=1.2',

@@ -40,3 +40,13 @@ This image demonstrates some curious social relations between
 japan/vim/haskell users (click for fullsize image):
 
 [![](http://dump.bitcheese.net/files/eburote/jp-shrink-min.png)](http://dump.bitcheese.net/files/ebugipo/jp-min.png)
+
+## License
+
+github-social-graph - Build simple social graphs for GitHub
+
+Written in 2014 by Kagami Hiiragi <kagami@genshiken.org>
+
+To the extent possible under law, the author(s) have dedicated all copyright and related and neighboring rights to this software to the public domain worldwide. This software is distributed without any warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication along with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
