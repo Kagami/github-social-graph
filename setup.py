@@ -13,6 +13,7 @@ setup(
         'pygithub3>=0.5.1',
         'pygraphviz>=1.2',
         'grequests>=0.2.0',
+        'Pillow>=2.4.0',
     ],
     dependency_links=[
         'https://github.com/Kagami/python-github3/archive/0.5.1.zip#egg=pygithub3-0.5.1',
