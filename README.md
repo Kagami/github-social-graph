@@ -41,19 +41,20 @@ Japan/Vim/Haskell users (click for fullsize image):
 
 [![](http://dump.bitcheese.net/files/yxakemu/jp-shrink-min.png)](http://dump.bitcheese.net/files/ifinofo/jp-min.png)
 
-(Produced by `github-social-graph --token --orgs vim-jp akechi golang-samples vimjolts --users bos tibbe donsbot kazu-yamamoto spl -o jp.png`)
+(Produced by `github-social-graph --token --orgs vim-jp akechi golang-samples vimjolts --users bos tibbe donsbot kazu-yamamoto spl -o jp.png`.)
 
 Much simpler graph:
 
 ![](http://dump.bitcheese.net/files/itanida/kagami.png)
 
-(Produced by `github-social-graph --full-graph --users Kagami -o kagami.png`)
+(Produced by `github-social-graph --full-graph --users Kagami -o kagami.png`.)
 
 ## TODO
 
 * Proper error handling
 * Info about current rate limits
 * Deep crawling
+* Merge several JSON inputs
 * Additional graph modes and options
 
 ## License
