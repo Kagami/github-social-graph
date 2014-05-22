@@ -36,18 +36,18 @@ $ github-social-graph -i jp.json -o jp.png
 
 ## Examples
 
-This image demonstrates some curious social relations between
-Japan/Vim/Haskell users (click for fullsize image):
+This graph demonstrates some curious relationships between
+Japanese/Vim/Haskell users (click for fullsize image):
 
 [![](http://dump.bitcheese.net/files/yxakemu/jp-shrink-min.png)](http://dump.bitcheese.net/files/ifinofo/jp-min.png)
 
-(Produced by `github-social-graph --token --orgs vim-jp akechi golang-samples vimjolts --users bos tibbe donsbot kazu-yamamoto spl -o jp.png`.)
+(Produced by `github-social-graph --token --orgs vim-jp akechi golang-samples vimjolts --users bos tibbe donsbot kazu-yamamoto spl -o jp.png`)
 
 Much simpler graph:
 
 ![](http://dump.bitcheese.net/files/itanida/kagami.png)
 
-(Produced by `github-social-graph --full-graph --users Kagami -o kagami.png`.)
+(Produced by `github-social-graph --full-graph --users Kagami -o kagami.png`)
 
 ## TODO
 
