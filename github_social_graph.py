@@ -25,6 +25,7 @@ import tempfile
 import os.path as path
 import json
 import argparse
+from copy import deepcopy
 from itertools import izip
 from StringIO import StringIO
 
@@ -37,8 +38,11 @@ SUPPORTED_INPUT_FORMATS = ['json', 'dot']
 AVATAR_DOWNLOADING_PARALLEL_LEVEL = 10
 AVATAR_SIZE = 60
 DPI = 96
-CIRCLES_BORDER_COLOR = '#3182bd'
-ARROWS_BORDER_COLOR = '#9ecae1'
+# blues4
+BACKGROUND_COLOR = '#eff3ff'
+ARROWS_BORDER_COLOR = '#bdd7e7'
+CIRCLES_BORDER_COLOR = '#6baed6'
+TEXT_COLOR = '#2171b5'
 
 
 def log(text, *args, **kwargs):
@@ -75,16 +79,33 @@ def fetcher(options):
         info = get_or_set(username)
         info['followers'] = [f.login for f in followers]
         info['following'] = [f.login for f in following]
-        if options.avatars:
-            log('Fetching {}\'s followers and following info...', username)
+    graph_data = process_graph_data(graph_data)
+    if options.avatars:
+        for username, info in graph_data.iteritems():
+            log('Fetching {}\'s info...', username)
             info['avatar_url'] = github.users.get(username).avatar_url
-            for f in set(info['followers'] + info['following']):
-                f_info = get_or_set(f)
-                if 'avatar_url' in f_info:
-                    continue
-                f_info['avatar_url'] = github.users.get(f).avatar_url
     log('Fetching is complete.')
+    return graph_data
 
+
+def process_graph_data(graph_data):
+    """
+    Fix graph data to make it easier to create big graphs.
+    """
+    graph_data = deepcopy(graph_data)
+    for username, info in graph_data.iteritems():
+        # Leave only users with followers info (do not draw huge amount
+        # of isolated nodes).
+        info['followers'] = [
+            f
+            for f in info.get('followers', [])
+            if 'followers' in graph_data.get(f, {})
+        ]
+        info['following'] = [
+            f
+            for f in info.get('following', [])
+            if 'followers' in graph_data.get(f, {})
+        ]
     return graph_data
 
 
@@ -130,8 +151,7 @@ def process_options():
         help='users to start fetching data with')
     parser.add_argument(
         '-na', '--no-avatars', action='store_false', dest='avatars',
-        help='do not show avatars in graphs '
-             '(requires additional API requests)')
+        help='do not show avatars in graphs')
 
     options = parser.parse_args()
 
@@ -153,6 +173,8 @@ def process_options():
         parser.error('specified input format do not supported')
     if options.output and not options.output_format:
         options.output_format = path.splitext(options.output.name)[1][1:]
+    if options.input_format == 'dot' and options.output_format == 'json':
+        parser.error('could not convert dot to json')
     if not options.input and not options.orgs and not options.users:
         parser.error('no input data and no users/organizations is provided')
 
@@ -180,18 +202,18 @@ def get_avatar_path(node):
     return path.join(get_avatars_cache_dir(), '{}.png'.format(node))
 
 
-def create_graph(graph_data, format, avatars):
+def create_graph(graph_data, input_format, avatars):
     def add_node(node):
         attrs = {
             'label': node,
-            'image': '',
             'shape': 'circle',
             'margin': 0,
             'color': CIRCLES_BORDER_COLOR,
+            'fontcolor': TEXT_COLOR,
         }
         if avatars:
             # TODO: Draw some placeholder image for users without avatars?
-            if 'avatar_url' in graph_data[node]:
+            if 'avatar_url' in graph_data.get(node, {}):
                 attrs['image'] = get_avatar_path(node)
                 attrs['label'] = ''
                 attrs['width'] = AVATAR_SIZE/DPI
@@ -199,10 +221,15 @@ def create_graph(graph_data, format, avatars):
                 attrs['fixedsize'] = 'true'
         graph.add_node(node, **attrs)
 
-    if format == 'dot':
-        graph = AGraph(graph_data, directed=True)
+    graph_attrs = {
+        'directed': True,
+        'dpi': DPI,
+        'background': BACKGROUND_COLOR,
+    }
+    if input_format == 'dot':
+        graph = AGraph(graph_data, **graph_attrs)
     else:
-        graph = AGraph(directed=True)
+        graph = AGraph(**graph_attrs)
         for username, info in graph_data.iteritems():
             add_node(username)
             for f in info.get('followers', []):
@@ -214,7 +241,7 @@ def create_graph(graph_data, format, avatars):
     return graph
 
 
-def fetch_avatars(graph_data):
+def download_avatars(graph_data):
     import grequests
 
     def is_cached(username):
@@ -295,8 +322,9 @@ def main():
         if options.output_format == 'dot':
             graph.write(options.output)
         else:
-            if options.avatars:
-                fetch_avatars(graph_data)
+            if options.avatars and \
+                    (options.input_format == 'json' or not options.input):
+                download_avatars(graph_data)
             draw_graph(graph, options.output, options.output_format)
     if options.output is not sys.stdout:
         options.output.close()
