@@ -79,11 +79,19 @@ def fetcher(options):
         info = get_or_set(username)
         info['followers'] = [f.login for f in followers]
         info['following'] = [f.login for f in following]
-    graph_data = process_graph_data(graph_data)
+    if not options.full_graph:
+        graph_data = process_graph_data(graph_data)
     if options.avatars:
-        for username, info in graph_data.iteritems():
+        for username, info in graph_data.items():
             log('Fetching {}\'s info...', username)
             info['avatar_url'] = github.users.get(username).avatar_url
+            if options.full_graph:
+                for f in set(info['followers'] + info['following']):
+                    f_info = get_or_set(f)
+                    if 'avatar_url' in f_info:
+                        continue
+                    log('Fetching {}\'s info...', f)
+                    f_info['avatar_url'] = github.users.get(f).avatar_url
     log('Fetching is complete.')
     return graph_data
 
@@ -152,6 +160,10 @@ def process_options():
     parser.add_argument(
         '-na', '--no-avatars', action='store_false', dest='avatars',
         help='do not show avatars in graphs')
+    parser.add_argument(
+        '-fg', '--full-graph', action='store_true',
+        help='fetch and draw full graph '
+             '(this may take a long time and lot of API requests)')
 
     options = parser.parse_args()
 
