@@ -22,3 +22,6 @@ clean c:
 
 mrproper: clean clean-env
 	find -name '*.pyc' -delete
+
+t:
+	$(GSG) -i 1.json -o - -of png | feh -F -

@@ -3,7 +3,7 @@ Build simple social graphs for GitHub.
 
 Examples:
 
-# Draw graph for vim-jp organization (without authorization):
+# Draw graph for vim-jp organization members (without authorization):
 $ github-social-graph --orgs vim-jp -o 1.png
 
 # Draw graph for organization and users (with authorization by password):
@@ -16,13 +16,22 @@ $ github-social-graph --orgs vim-jp -o jp.json
 $ github-social-graph -i jp.json -o jp.png
 """
 
+import os
 import sys
+import errno
+import tempfile
+import os.path as path
 import json
 import argparse
-import os.path as path
+from itertools import izip
 
 from pygithub3 import Github
 from pygraphviz import AGraph
+
+
+SUPPORTED_INPUT_FORMATS = ['json', 'dot']
+AVATAR_SIZE = 60
+AVATAR_DOWNLOADING_PARALLEL_LEVEL = 10
 
 
 def log(text, *args, **kwargs):
@@ -32,27 +41,41 @@ def log(text, *args, **kwargs):
 
 
 def fetcher(options):
+    def get_or_set(username):
+        try:
+            info = graph_data[username]
+        except KeyError:
+            graph_data[username] = info = {}
+        return info
+
     github = Github(
         login=options.username, password=options.password,
         token=options.token)
 
     graph_data = {}
-    usernames = set()
+    usernames = set(options.users)
 
     log('Start fetching GitHub data. It may take some time, be patient.')
-    for org_name in options.orgs:
+    for org_name in set(options.orgs):
         log('Fetching {}\'s members...', org_name)
         users = github.orgs.members.list_public(org_name).all()
         for user in users:
             usernames.add(user.login)
-    for username in options.users:
+    for username in usernames:
         log('Fetching {}\'s followers and following...', username)
         followers = github.users.followers.list(username).all()
         following = github.users.followers.list_following(username).all()
-        graph_data[username] = {
-            'followers': [f.login for f in followers],
-            'following': [f.login for f in following],
-        }
+        info = get_or_set(username)
+        info['followers'] = [f.login for f in followers]
+        info['following'] = [f.login for f in following]
+        if options.avatars:
+            log('Fetching {}\'s followers and following info...', username)
+            info['avatar_url'] = github.users.get(username).avatar_url
+            for f in set(info['followers'] + info['following']):
+                f_info = get_or_set(f)
+                if 'avatar_url' in f_info:
+                    continue
+                f_info['avatar_url'] = github.users.get(f).avatar_url
     log('Fetching is complete.')
 
     return graph_data
@@ -61,7 +84,6 @@ def fetcher(options):
 def process_options():
     class _NoPassword: pass
     class _NoToken: pass
-    SUPPORTED_INPUT_FORMATS=['json', 'dot']
 
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -99,6 +121,10 @@ def process_options():
     parser.add_argument(
         '--users', metavar='USERNAME', nargs='*', default=[],
         help='users to start fetching data with')
+    parser.add_argument(
+        '-na', '--no-avatars', action='store_false', dest='avatars',
+        help='do not show avatars in graphs '
+             '(requires additional API requests)')
 
     options = parser.parse_args()
 
@@ -139,17 +165,71 @@ def process_options():
     return options
 
 
-def create_graph(graph_data, format):
+def get_avatars_cache_dir():
+    return path.join(tempfile.gettempdir(), 'github-social-graph')
+
+
+def get_avatar_path(node):
+    return path.join(get_avatars_cache_dir(), '{}.png'.format(node))
+
+
+def create_graph(graph_data, format, avatars):
+    def add_avatar_node(node):
+        # TODO: Draw some placeholder image for users without avatars?
+        if avatars:
+            avatar_url = graph_data[node].get('avatar_url')
+            if avatar_url:
+                graph.add_node(node, image=get_avatar_path(node), label='')
+
     if format == 'dot':
         graph = AGraph(graph_data, directed=True)
     else:
         graph = AGraph(directed=True)
         for username, info in graph_data.iteritems():
-            for f in info['followers']:
-                graph.add_edge(f, username)
-            for f in info['following']:
-                graph.add_edge(username, f)
+            add_avatar_node(username)
+            for f in info.get('followers', []):
+                add_avatar_node(f)
+                graph.add_edge(f, username, color='blue')
+            for f in info.get('following', []):
+                add_avatar_node(f)
+                graph.add_edge(username, f, color='blue')
     return graph
+
+
+def fetch_avatars(graph_data):
+    import grequests
+
+    def is_cached(username):
+        avatar_path = get_avatar_path(username)
+        if path.exists(avatar_path):
+            return True
+
+    def mkdirp(dirname):
+        # Source: <https://stackoverflow.com/a/600612>.
+        try:
+            os.makedirs(dirname)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST and path.isdir(dirname):
+                pass
+            else:
+                raise
+
+    mkdirp(get_avatars_cache_dir())
+    urls_usernames = [
+        ('{}s={}'.format(info['avatar_url'], AVATAR_SIZE), username)
+        for username, info in graph_data.iteritems()
+        if 'avatar_url' in info and not is_cached(username)]
+    if not urls_usernames:
+        return
+    log('Downloading {} avatars...', len(urls_usernames))
+    reqs = (grequests.get(u[0]) for u in urls_usernames)
+    resps = grequests.map(reqs, size=AVATAR_DOWNLOADING_PARALLEL_LEVEL)
+    usernames = (u[1] for u in urls_usernames)
+    # XXX: Don't know how to set parameter to the response given only
+    # request object. So this hack.
+    for resp, username in izip(resps, usernames):
+        with open(get_avatar_path(username), 'w') as fh:
+            fh.write(resp.content)
 
 
 def draw_graph(graph, output, format):
@@ -174,10 +254,12 @@ def main():
     if options.output_format == 'json':
         json.dump(graph_data, options.output)
     else:
-        graph = create_graph(graph_data, options.input_format)
+        graph = create_graph(graph_data, options.input_format, options.avatars)
         if options.output_format == 'dot':
             graph.write(options.output)
         else:
+            if options.avatars:
+                fetch_avatars(graph_data)
             draw_graph(graph, options.output, options.output_format)
     if options.output is not sys.stdout:
         options.output.close()

@@ -10,8 +10,12 @@ setup(
     url='https://github.com/Kagami/github-social-graph',
     description='Build simple social graphs for GitHub',
     install_requires=[
-        'pygithub3>=0.5',
+        'pygithub3>=0.5.1',
         'pygraphviz>=1.2',
+        'grequests>=0.2.0',
+    ],
+    dependency_links=[
+        'https://github.com/Kagami/python-github3/archive/0.5.1.zip#egg=pygithub3-0.5.1',
     ],
     packages=find_packages(exclude=['tests']),
     entry_points={
