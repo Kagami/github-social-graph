@@ -49,6 +49,13 @@ Much simpler graph:
 
 (Produced by `github-social-graph --full-graph --users Kagami -o kagami.png`)
 
+## TODO
+
+* Proper error handling
+* Info about current rate limits
+* Deep crawling
+* Additional graph modes and options
+
 ## License
 
 github-social-graph - Build simple social graphs for GitHub
