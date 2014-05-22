@@ -222,12 +222,14 @@ def create_graph(graph_data, input_format, avatars):
             'margin': 0,
             'color': CIRCLES_BORDER_COLOR,
             'fontcolor': TEXT_COLOR,
+            'fontsize': 10,
         }
         if avatars:
             # TODO: Draw some placeholder image for users without avatars?
             if 'avatar_url' in graph_data.get(node, {}):
                 attrs['image'] = get_avatar_path(node)
                 attrs['label'] = ''
+                attrs['xlabel'] = node
                 attrs['width'] = AVATAR_SIZE/DPI
                 attrs['height'] = AVATAR_SIZE/DPI
                 attrs['fixedsize'] = 'true'
@@ -309,7 +311,7 @@ def process_avatar(data):
 
 
 def draw_graph(graph, output, format):
-    graph.draw(output, format=format, prog='dot')
+    graph.draw(output, format=format, prog='dot', args='-q')
 
 
 def main():
