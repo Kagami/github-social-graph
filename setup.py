@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 setup(
@@ -17,7 +17,7 @@ setup(
     dependency_links=[
         'https://github.com/Kagami/python-github3/archive/0.5.1.zip#egg=pygithub3-0.5.1',
     ],
-    packages=find_packages(exclude=['tests']),
+    py_modules=['github_social_graph'],
     entry_points={
         'console_scripts': [
             'github-social-graph = github_social_graph:main',
