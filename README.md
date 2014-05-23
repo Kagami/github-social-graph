@@ -5,7 +5,13 @@ API and [graphviz](http://www.graphviz.org/).
 
 ## Installation
 
-Installation via PIP:
+Installation via pip 1.5+:
+
+```bash
+$ pip install --process-dependency-links https://github.com/Kagami/github-social-graph/archive/master.zip
+```
+
+Installation via pip &lt;1.5:
 
 ```bash
 $ pip install https://github.com/Kagami/github-social-graph/archive/master.zip
