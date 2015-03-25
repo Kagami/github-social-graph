@@ -12,7 +12,7 @@ setup(
     license='CC0',
     install_requires=[
         'pygithub3>=0.5.1',
-        'pygraphviz>=1.2',
+        'pygraphviz>=1.3rc2',
         'grequests>=0.2.0',
         'Pillow>=2.4.0',
     ],
