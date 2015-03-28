@@ -24,10 +24,12 @@ import errno
 import tempfile
 import os.path as path
 import json
+import Queue
+import urllib2
 import argparse
 from copy import deepcopy
-from itertools import izip
 from StringIO import StringIO
+from threading import Thread
 
 from pygithub3 import Github
 from pygraphviz import AGraph
@@ -256,15 +258,13 @@ def create_graph(graph_data, input_format, avatars):
 
 
 def download_avatars(graph_data):
-    import grequests
-
     def is_cached(username):
         avatar_path = get_avatar_path(username)
         if path.exists(avatar_path):
             return True
 
     def mkdirp(dirname):
-        # Source: <https://stackoverflow.com/a/600612>.
+        # See <https://stackoverflow.com/a/600612> for details.
         try:
             os.makedirs(dirname)
         except OSError as exc:
@@ -272,6 +272,19 @@ def download_avatars(graph_data):
                 pass
             else:
                 raise
+
+    def download(queue, res):
+        # TODO(Kagami): Error handling, timeouts...
+        while True:
+            try:
+                url, username = queue.get_nowait()
+            except Queue.Empty:
+                return
+            try:
+                data = urllib2.urlopen(url).read()
+                res.append((data, username))
+            finally:
+                queue.task_done()
 
     mkdirp(get_avatars_cache_dir())
     urls_usernames = [
@@ -281,14 +294,17 @@ def download_avatars(graph_data):
     if not urls_usernames:
         return
     log('Downloading {} avatars...', len(urls_usernames))
-    reqs = (grequests.get(u[0]) for u in urls_usernames)
-    resps = grequests.map(reqs, size=AVATAR_DOWNLOADING_PARALLEL_LEVEL)
-    usernames = (u[1] for u in urls_usernames)
-    # XXX: Don't know how to set parameter to the response given only
-    # request object. So this hack.
-    for resp, username in izip(resps, usernames):
+
+    queue = Queue.Queue()
+    map(queue.put, urls_usernames)
+    res = []
+    threads_num = min(AVATAR_DOWNLOADING_PARALLEL_LEVEL, len(urls_usernames))
+    for _ in xrange(threads_num):
+        Thread(target=download, args=(queue, res)).start()
+    queue.join()
+    for data, username in res:
         with open(get_avatar_path(username), 'w') as fh:
-            fh.write(process_avatar(resp.content))
+            fh.write(process_avatar(data))
 
 
 def process_avatar(data):

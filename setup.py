@@ -13,7 +13,6 @@ setup(
     install_requires=[
         'pygithub33>=0.6.1',
         'pygraphviz>=1.3rc2',
-        'grequests>=0.2.0',
         'Pillow>=2.4.0',
     ],
     py_modules=['github_social_graph'],
