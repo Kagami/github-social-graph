@@ -232,8 +232,8 @@ def create_graph(graph_data, input_format, avatars):
                 attrs['image'] = get_avatar_path(node)
                 attrs['label'] = ''
                 attrs['xlabel'] = node
-                attrs['width'] = AVATAR_SIZE/DPI
-                attrs['height'] = AVATAR_SIZE/DPI
+                attrs['width'] = AVATAR_SIZE / DPI
+                attrs['height'] = AVATAR_SIZE / DPI
                 attrs['fixedsize'] = 'true'
         graph.add_node(node, **attrs)
 
