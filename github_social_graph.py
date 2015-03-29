@@ -85,7 +85,7 @@ def fetcher(options):
     if not options.full_graph:
         graph_data = process_graph_data(graph_data)
     if options.avatars:
-        for username, info in graph_data.items():
+        for username, info in list(six.iteritems(graph_data)):
             log('Fetching {}\'s info...', username)
             info['avatar_url'] = github.users.get(username).avatar_url
             if options.full_graph:
@@ -348,7 +348,7 @@ def main():
         graph_data = fetcher(options)
 
     if options.output_format == 'json':
-        json.dump(graph_data, options.output)
+        options.output.write(json.dumps(graph_data).encode('utf-8'))
     else:
         graph = create_graph(graph_data, options.input_format, options.avatars)
         if options.output_format == 'dot':
