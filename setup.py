@@ -14,6 +14,7 @@ setup(
         'pygithub33>=0.6.1',
         'pygraphviz>=1.3rc2',
         'Pillow>=2.4.0',
+        'six',
     ],
     py_modules=['github_social_graph'],
     entry_points={
