@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
     # Reference: http://pythonhosted.org/distribute/setuptools.html
     name='github-social-graph',
-    version='0.1.0',
+    version='0.1.1',
     author='Kagami Hiiragi',
     author_email='kagami@genshiken.org',
     url='https://github.com/Kagami/github-social-graph',
