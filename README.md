@@ -3,10 +3,18 @@
 This program helps to build simple social graphs for GitHub with the
 help of GitHub API v3 and [graphviz](http://www.graphviz.org/).
 
+## Prerequisites
+
+To build `Pillow` and `pygraphviz` dependencies you will need some dev
+packages. Example for Debian-like system:
+```
+$ [sudo] apt-get install python-dev libjpeg-dev pkg-config graphviz-dev
+```
+
 ## Install
 
 ```bash
-$ pip install https://github.com/Kagami/github-social-graph/archive/master.zip
+$ [sudo] pip install github-social-graph
 ```
 
 ## Usage
@@ -20,16 +28,16 @@ Usage examples:
 
 ```bash
 # Draw graph for vim-jp organization members (without authorization):
-$ github-social-graph --orgs vim-jp -o 1.png
+$ gsg --orgs vim-jp -o 1.png
 
 # Draw graph for organization and users (with authorization by password):
-$ github-social-graph -u Kagami -p --orgs vim-jp --users Shougo -o 1.png
+$ gsg -u Kagami -p --orgs vim-jp --users Shougo -o 1.png
 
 # Only fetch data for future use and analysis:
-$ github-social-graph --orgs vim-jp -o jp.json
+$ gsg --orgs vim-jp -o jp.json
 
 # Use pre-fetched data to draw graph:
-$ github-social-graph -i jp.json -o jp.png
+$ gsg -i jp.json -o jp.png
 ```
 
 ## Examples
