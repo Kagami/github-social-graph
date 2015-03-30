@@ -11,7 +11,7 @@ setup(
     description='Build simple social graphs for GitHub',
     license='CC0',
     install_requires=[
-        'pygithub33>=0.6.1',
+        'pygithub33>=0.6.2',
         'pygraphviz>=1.3rc2',
         'Pillow>=2.4.0',
         'six',
