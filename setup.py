@@ -22,4 +22,19 @@ setup(
             'github-social-graph = github_social_graph:main',
             'gsg = github_social_graph:main',
         ],
-    })
+    },
+    classifiers=[
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication',
+        'Operating System :: OS Independent',
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Information Technology',
+    ],
+)
